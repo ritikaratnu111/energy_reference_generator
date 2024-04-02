@@ -42,7 +42,6 @@ class InnovusPowerParser():
 
     def label_nets(self,signals):
         count = 0
-#        logging.info('Signals: %s', signals)
         for signal in signals:
             signal_substrings = signal.split('*')
             for name in self.nets:
@@ -50,7 +49,7 @@ class InnovusPowerParser():
                 label = net['label']
                 if (label == 'inactive'):
                     if all(substring in name for substring in signal_substrings):
-                        #logging.info(name)
+                        #print(signal_substrings, name)
                         self.nets[name]['label'] = signal
                             #Log the net name if the switching power is not 0
 #                            if (net['switching'] != 0):

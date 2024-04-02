@@ -10,6 +10,7 @@ class EnergyReferenceGenerator():
         self.testbenches = {}
         self.FABRIC_PATH = ""
         self.logger = None
+        self.reference = {}
         logging.basicConfig(level=logging.DEBUG)
 
     def get_fabric(self):
@@ -40,22 +41,39 @@ class EnergyReferenceGenerator():
         T = c_end - c_start
         for cell, info in activity.items():
             total = Measurement()
-            #Read cell power for all iterations
             for i in range(start, end):
                 pwr_file=f"{tb}/vcd/iter_{i}.vcd.pwr"
                 reader = InnovusPowerParser()
                 reader.update_nets(pwr_file)
                 current = Measurement()
-                current.set_measurement(reader, cell, T)
+                current.set_measurement(reader, [cell], T)
+                print(current.nets)
                 total = total + current
-                print(i, cell, current)
-                print("Total", total)
             avg = total / (end - start)
-            print(avg)
+            self.reference[cell] = {
+                "cycles"    : T,
+                "power"     : {
+                    "internal"  : avg.power.internal,
+                    "switching" : avg.power.switching,
+                    "leakage"   : avg.power.leakage
+                    
+                },
+                "energy"    : {   
+                    "internal"  : avg.energy.internal,
+                    "switching" : avg.energy.switching,
+                    "leakage"   : avg.energy.leakage
+                }
+            }
 
     def generate_energy(self):
         for name, info in self.testbenches.items():
             if info["to_run"] == True:
                 tb = info["path"]
                 self.update_logger(tb, name, info['about'])
-                self.get_cells(tb, 0, 2)
+                self.get_cells(tb, 0, 1)
+                self.write_energy(tb)
+    
+    def write_energy(self, tb):
+        with open(f"{tb}/reference.json", "w") as file:
+            data = json.dumps(self.reference, indent = 2)
+            file.write(data)

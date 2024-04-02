@@ -16,6 +16,28 @@ class Power():
         self.leakage = power['leakage']
         self.total = power['internal'] + power['switching'] + power['leakage']
         self.t = t
+    
+    def __add__(self, other):
+        result = Power()
+        result.internal = self.internal + other.internal
+        result.switching = self.switching + other.switching
+        result.leakage = self.leakage + other.leakage
+        result.total = self.total + other.total
+        result.t = self.t  
+        return result
+
+    def __truediv__(self, n):
+        result = Power()
+        result.internal = self.internal / n
+        result.switching = self.switching / n
+        result.leakage = self.leakage / n
+        result.total = self.total / n
+        result.t = self.t
+        return result
+
+    def __str__(self):
+        return f"Power: Internal={self.internal}, Switching={self.switching}, Leakage={self.leakage}, Total={self.total}, Time={self.t}"
+
 
 class Energy():
     def __init__(self):
@@ -61,19 +83,22 @@ class Measurement():
         self.signals = []
 
     def set_measurement(self, reader, signals, t):
+        print(signals)
         reader.label_nets(signals)
-        power, nets = reader.get_power(signals)
+        power, self.nets = reader.get_power(signals)
         self.power.update(power, t)
         self.energy.update(power, t)
 
     def __add__(self, other):
         result = Measurement()
         result.energy = self.energy + other.energy
+        result.power = self.power + other.power
         return result
 
     def __truediv__(self, n):
         result = Measurement()
         result.energy = self.energy / n
+        result.power = self.power / n
         return result
 
     def __str__(self):
